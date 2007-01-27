@@ -140,12 +140,13 @@ found:
 		; Check if the destination file exists, if not skip the patch
 		; to avoid creating 0 sized files
 		IfFileExists $R1 gentemp
-		DetailPrint "Skipping not installed $R1"
+		DetailPrint "Skipping $R1 since is not installed"
 		Goto Loop
 
 	gentemp:
-		; Generate a random tmp name
-		GetTempFileName $R0
+		; Generate a temp file in the app dir, this is better than
+		; using a temp file and renaming it on reboot (tmp can be cleaned)
+		StrCpy $R0 "$R1.cwu"
 
 		DetailPrint "Patching $R1"
 
