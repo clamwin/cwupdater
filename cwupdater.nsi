@@ -65,12 +65,12 @@ Function StripEol
 	Push $2
 	StrCpy $1 0
 loop:
-    IntOp $1 $1 + 1
-    StrCpy $2 $0 1 $1
+	IntOp $1 $1 + 1
+	StrCpy $2 $0 1 $1
 	StrCmp $2 $\r found
 	StrCmp $2 $\n found
-    StrCmp $2 "" end
-    Goto loop
+	StrCmp $2 "" end
+	Goto loop
 found:
 	StrCpy $0 $0 $1
 end:
@@ -80,7 +80,7 @@ end:
 FunctionEnd
 
 Section "CwUpdater"
- 	Var /GLOBAL DESTDIR
+	Var /GLOBAL DESTDIR
 	Var /GLOBAL BINDIR
 	Var /GLOBAL VERSTR
 	Var /GLOBAL VERDW
