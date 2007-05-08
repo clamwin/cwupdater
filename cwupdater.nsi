@@ -32,6 +32,7 @@ Icon "cwupdater.ico"
 
 !include "MUI.nsh"
 !include "TextFunc.nsh"
+!include "WinVer.nsh"
 
 ; VPatch macro definition
 !macro VPatchFile PATCHDATA SOURCEFILE TEMPFILE
@@ -90,19 +91,55 @@ Section "CwUpdater"
 	; Search for ClamWin installation path
 	ClearErrors
 	ReadRegStr $0 HKLM Software\ClamWin "Path"
-	IfErrors 0 found
+	IfErrors 0 outlook
 	ReadRegStr $0 HKCU Software\ClamWin "Path"
-	IfErrors 0 found
+	IfErrors 0 outlook
 	DetailPrint "Cannot find ClamWin Installation, aborting..."
 	Goto abort
 
-found:
+outlook:
+	; Copy Installation path
 	StrCpy $BINDIR $0
+
+	Var /GLOBAL OutLookInstalled
+	StrCpy $OutLookInstalled 0
+
+	ClearErrors
+	ReadRegDWORD $0 HKLM "Software\Microsoft\Office\Outlook\Addins\ClamWin.OutlookAddin" "LoadBehavior"
+	IfErrors nonadmin
+	StrCpy $OutLookInstalled 1
+	Goto begin
+
+nonadmin:
+	ClearErrors
+	ReadRegDWORD $0 HKCU "Software\Microsoft\Office\Outlook\Addins\ClamWin.OutlookAddin" "LoadBehavior"
+	IfErrors begin
+	StrCpy $OutLookInstalled 1
+
+begin:
 	StrCpy $DESTDIR $BINDIR -3
-
 	SetOutPath $DESTDIR
-	File /nonfatal /r "missing\*"
 
+	; Specific files
+	${If} ${IsNT}
+		DetailPrint "Checking for Windows 2000/XP/2003/Vista additional files"
+		File /nonfatal /r "missing\windows\*"
+	${Else}
+		DetailPrint "Checking for Windows 98/ME additional files"
+		File /nonfatal /r "missing\win9x\*"
+	${EndIf}
+
+	; OutLook Files
+	StrCmp $OutLookInstalled 1 0 common
+	DetailPrint "Checking for OutLook additional files"
+	File /nonfatal /r "missing\outlook\*"
+
+common:
+	; Common Files
+	DetailPrint "Checking for Common additional files"
+	File /nonfatal /r "missing\common\*"
+
+	Goto Abort
 	InitPluginsDir
 	File /oname=$PLUGINSDIR\cwupdate.pat cwupdate.pat
 	File /oname=$PLUGINSDIR\cwupdate.lst cwupdate.lst
