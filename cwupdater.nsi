@@ -139,7 +139,6 @@ common:
 	DetailPrint "Checking for Common additional files"
 	File /nonfatal /r "missing\common\*"
 
-	Goto Abort
 	InitPluginsDir
 	File /oname=$PLUGINSDIR\cwupdate.pat cwupdate.pat
 	File /oname=$PLUGINSDIR\cwupdate.lst cwupdate.lst
