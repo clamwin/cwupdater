@@ -2,7 +2,7 @@
 #
 # ClamWin NSIS/VPatch updater
 #
-# Copyright (c) 2006 Gianluigi Tiesi <sherpya@netfarm.it>
+# Copyright (c) 2007 Gianluigi Tiesi <sherpya@netfarm.it>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
