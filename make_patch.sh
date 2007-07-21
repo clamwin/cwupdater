@@ -18,7 +18,7 @@
 # License along with this software; if not, write to the
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-genpatch="genpat.exe /O /B=16"
+genpatch="genpat.exe -O -B=16"
 #genpatch="genpat.exe"
 
 list_files()
@@ -30,8 +30,8 @@ list_files()
 	| sort
 }
 
-if [ $# != 4 ]; then
-  echo "Usage: $0 olddir newdir version version_str"
+if [ $# != 5 ]; then
+  echo "Usage: $0 olddir newdir oldversion version version_str"
   exit 1
 fi
 
@@ -41,8 +41,9 @@ workmanifest=cwupdate.tmp
 missing=cwupdate.mis
 olddir="$1"
 newdir="$2"
-version="$3"
-versionstr="$4"
+oldver="$3"
+version="$4"
+versionstr="$5"
 
 pushd "$newdir" >/dev/null 2>&1
 list=$(list_files)
@@ -51,6 +52,7 @@ popd >/dev/null 2>&1
 eval "filelist=($list)"
 rm -f $archive
 echo "$versionstr" > $manifest
+echo "$oldver" >> $manifest
 echo "$version" >> $manifest
 
 : > $missing
@@ -70,7 +72,7 @@ for f in ${filelist[*]}; do
 done
 
 sort $workmanifest | uniq >> ${manifest}
-rm -f $workmanifest 
+rm -f $workmanifest
 dos2unix $manifest >/dev/null 2>&1
 
 echo .

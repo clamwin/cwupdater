@@ -29,6 +29,7 @@ SilentInstall normal
 ShowInstDetails show
 InstallColors FF8080 000030
 Icon "cwupdater.ico"
+CompletedText "Done"
 
 !include "MUI.nsh"
 !include "TextFunc.nsh"
@@ -38,7 +39,6 @@ Icon "cwupdater.ico"
 !macro VPatchFile PATCHDATA SOURCEFILE TEMPFILE
 	vpatch::vpatchfile "${PATCHDATA}" "${SOURCEFILE}" "${TEMPFILE}"
 	Pop $1
-	DetailPrint $1
 	StrCpy $1 $1 2
 	StrCmp $1 "OK" ok_${SOURCEFILE}
 	SetErrors
@@ -80,30 +80,39 @@ end:
 FunctionEnd
 
 Section "CwUpdater"
+	Var /GLOBAL OutLookInstalled
 	Var /GLOBAL DESTDIR
 	Var /GLOBAL BINDIR
 	Var /GLOBAL VERSTR
+	Var /GLOBAL VER
+	Var /GLOBAL OLDVERDW
 	Var /GLOBAL VERDW
-
 	Var /GLOBAL REGUNI
+
 	StrCpy $REGUNI "Software\Microsoft\Windows\CurrentVersion\Uninstall\ClamWin Free Antivirus_is1"
 
 	; Search for ClamWin installation path
 	ClearErrors
-	ReadRegStr $0 HKLM Software\ClamWin "Path"
-	IfErrors 0 outlook
-	ReadRegStr $0 HKCU Software\ClamWin "Path"
-	IfErrors 0 outlook
+	ReadRegStr $BINDIR HKLM Software\ClamWin "Path"
+	IfErrors 0 version
+	ReadRegStr $BINDIR HKCU Software\ClamWin "Path"
+	IfErrors 0 version
 	DetailPrint "Cannot find ClamWin Installation, aborting..."
 	Goto abort
 
+version:
+    ; Installed Version
+	ClearErrors
+	ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
+	IfErrors 0 outlook
+	ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
+	IfErrors 0 outlook
+	DetailPrint "Cannot find ClamWin Version, aborting..."
+	Goto abort
+
 outlook:
-	; Copy Installation path
-	StrCpy $BINDIR $0
-
-	Var /GLOBAL OutLookInstalled
+    ; Search for outlook
 	StrCpy $OutLookInstalled 0
-
 	ClearErrors
 	ReadRegDWORD $0 HKLM "Software\Microsoft\Office\Outlook\Addins\ClamWin.OutlookAddin" "LoadBehavior"
 	IfErrors nonadmin
@@ -117,31 +126,11 @@ nonadmin:
 	StrCpy $OutLookInstalled 1
 
 begin:
-	StrCpy $DESTDIR $BINDIR -3
-	SetOutPath $DESTDIR
-
-	; Specific files
-	${If} ${IsNT}
-		DetailPrint "Checking for Windows 2000/XP/2003/Vista additional files"
-		File /nonfatal /r "missing\windows\*"
-	${Else}
-		DetailPrint "Checking for Windows 98/ME additional files"
-		File /nonfatal /r "missing\win9x\*"
-	${EndIf}
-
-	; OutLook Files
-	StrCmp $OutLookInstalled 1 0 common
-	DetailPrint "Checking for OutLook additional files"
-	File /nonfatal /r "missing\outlook\*"
-
-common:
-	; Common Files
-	DetailPrint "Checking for Common additional files"
-	File /nonfatal /r "missing\common\*"
-
 	InitPluginsDir
+	SetDetailsPrint none
 	File /oname=$PLUGINSDIR\cwupdate.pat cwupdate.pat
 	File /oname=$PLUGINSDIR\cwupdate.lst cwupdate.lst
+	SetDetailsPrint both
 
 	FileOpen $0 $PLUGINSDIR\cwupdate.lst r
 
@@ -151,6 +140,19 @@ common:
 	Call StripEol
 	Pop $VERSTR
 
+    ; Read the old version number from the manifest
+	FileRead $0 $OLDVERDW
+	Push $OLDVERDW
+	Call StripEol
+	Pop $OLDVERDW
+
+	; Check if we have the correct version installed
+	IntCmpU $OLDVERDW $VER versionok
+	DetailPrint "Expected version $OLDVERDW, found $VER"
+	DetailPrint "This update isn't made for your installed ClamWin version, aborting..."
+	Goto abort
+
+versionok:
 	; Read the version number from the manifest
 	FileRead $0 $VERDW
 	Push $VERDW
@@ -158,9 +160,44 @@ common:
 	Pop $VERDW
 
 	DetailPrint "Closing ClamTray..."
+	SetDetailsPrint none
 	ExecWait '"$BINDIR\WClose.exe"'
+	SetDetailsPrint both
 
-	DetailPrint "Upgrading ClamWin to version $VERSTR ($VERDW)"
+    ; Extracting missing files
+	StrCpy $DESTDIR $BINDIR -3
+	SetDetailsPrint none
+	SetOutPath $DESTDIR
+	SetDetailsPrint both
+
+	; Specific files
+	${If} ${IsNT}
+		DetailPrint "Checking for Windows 2000/XP/2003/Vista additional files"
+		SetDetailsPrint none
+		File /nonfatal /r "missing\windows\*"
+		SetDetailsPrint both
+	${Else}
+		DetailPrint "Checking for Windows 98/ME additional files"
+		SetDetailsPrint none
+		File /nonfatal /r "missing\win9x\*"
+		SetDetailsPrint both
+	${EndIf}
+
+	; OutLook Files
+	StrCmp $OutLookInstalled 1 0 common
+	DetailPrint "Checking for OutLook additional files"
+	SetDetailsPrint none
+	File /nonfatal /r "missing\outlook\*"
+	SetDetailsPrint both
+
+common:
+	; Common Files
+	DetailPrint "Checking for Common additional files"
+	SetDetailsPrint none
+	File /nonfatal /r "missing\common\*"
+	SetDetailsPrint both
+
+	DetailPrint "Upgrading ClamWin to version $VERSTR ($OLDVERDW -> $VERDW)"
 	Loop:
 		ClearErrors
 		; Read a line from the manifest
@@ -214,7 +251,9 @@ regdone:
 		MessageBox MB_YESNO "A reboot is required to finish the upgrade. Do you wish to reboot now?" IDNO theend
 		Reboot
 startctray:
+	SetDetailsPrint none
 	Exec '"$BINDIR\ClamTray.exe"'
+	SetDetailsPrint both
 
 theend:
 	DetailPrint "ClamWin Upgraded to $VERSTR"
