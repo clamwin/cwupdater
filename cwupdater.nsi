@@ -97,7 +97,7 @@ Section "CwUpdater"
 	IfErrors 0 version
 	ReadRegStr $BINDIR HKCU Software\ClamWin "Path"
 	IfErrors 0 version
-	DetailPrint "Cannot find ClamWin Installation, aborting..."
+	DetailPrint "Cannot find ClamWin Free Antivirus Installation, aborting..."
 	Goto abort
 
 version:
@@ -107,7 +107,7 @@ version:
 	IfErrors 0 outlook
 	ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
 	IfErrors 0 outlook
-	DetailPrint "Cannot find ClamWin Version, aborting..."
+	DetailPrint "Cannot find ClamWin Free Antivirus Version, aborting..."
 	Goto abort
 
 outlook:
@@ -148,8 +148,10 @@ begin:
 
 	; Check if we have the correct version installed
 	IntCmpU $OLDVERDW $VER versionok
-	DetailPrint "Expected version $OLDVERDW, found $VER"
-	DetailPrint "This update isn't made for your installed ClamWin version, aborting..."
+	DetailPrint "Required version for this update is $OLDVERDW, found $VER"
+	DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this update"
+	DetailPrint "Please download the full instllation from http://www.clamwin.com/download/"
+	DetailPrint "Update unsuccessfull."
 	Goto abort
 
 versionok:
@@ -197,7 +199,7 @@ common:
 	File /nonfatal /r "missing\common\*"
 	SetDetailsPrint both
 
-	DetailPrint "Upgrading ClamWin to version $VERSTR ($OLDVERDW -> $VERDW)"
+	DetailPrint "Upgrading ClamWin Free Antivirus to version $VERSTR ($OLDVERDW -> $VERDW)"
 	Loop:
 		ClearErrors
 		; Read a line from the manifest
@@ -256,7 +258,7 @@ startctray:
 	SetDetailsPrint both
 
 theend:
-	DetailPrint "ClamWin Upgraded to $VERSTR"
+	DetailPrint "ClamWin Free Antivirus Upgraded to $VERSTR"
 abort:
 
 SectionEnd
