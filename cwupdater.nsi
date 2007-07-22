@@ -17,7 +17,7 @@
 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SetCompressor /solid lzma
-Name "ClamWin Updater"
+Name "ClamWin Free Antivirus Upgrade­"
 OutFile "cwupdater.exe"
 
 !packhdr tmp.dat "upx --best tmp.dat"
@@ -151,7 +151,7 @@ begin:
 	DetailPrint "Required version for this update is $OLDVERDW, found $VER"
 	DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this update"
 	DetailPrint "Please download the full instllation from http://www.clamwin.com/download/"
-	DetailPrint "Update unsuccessfull."
+	DetailPrint "Update unsuccessful."
 	Goto abort
 
 versionok:
