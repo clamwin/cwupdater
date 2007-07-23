@@ -105,7 +105,7 @@ version:
 	ClearErrors
 	ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
 	IfErrors 0 outlook
-	ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
+	ReadRegDWORD $VER HKCU "Software\ClamWin" "Version"
 	IfErrors 0 outlook
 	DetailPrint "Cannot find ClamWin Free Antivirus Version, aborting..."
 	Goto abort
