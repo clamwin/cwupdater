@@ -39,6 +39,7 @@ archive=cwupdate.pat
 manifest=cwupdate.lst
 workmanifest=cwupdate.tmp
 missing=cwupdate.mis
+logfile=patch.log
 olddir="$1"
 newdir="$2"
 oldver="$3"
@@ -56,6 +57,7 @@ echo "$oldver" >> $manifest
 echo "$version" >> $manifest
 
 : > $missing
+: > $logfile
 
 echo Starting incremental patch generation...
 echo .
@@ -66,7 +68,7 @@ for f in ${filelist[*]}; do
 		echo $f >> $missing
 	elif ! diff "$olddir/$f" "$newdir/$f" >/dev/null 2>&1; then
 		echo "Patch: $f"
-		$genpatch "$olddir/$f" "$newdir/$f" $archive >patch.log 2>&1
+		$genpatch "$olddir/$f" "$newdir/$f" $archive >>$logfile 2>&1
 		echo $f | sed 's/,.//'| tr / \\  >> $workmanifest
 	fi
 done
