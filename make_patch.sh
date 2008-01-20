@@ -66,7 +66,7 @@ for f in ${filelist[*]}; do
 		echo $f >> $missing
 	elif ! diff "$olddir/$f" "$newdir/$f" >/dev/null 2>&1; then
 		echo "Patch: $f"
-		$genpatch "$olddir/$f" "$newdir/$f" $archive >/dev/null 2>&1
+		$genpatch "$olddir/$f" "$newdir/$f" $archive >patch.log 2>&1
 		echo $f | sed 's/,.//'| tr / \\  >> $workmanifest
 	fi
 done
