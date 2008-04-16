@@ -69,7 +69,7 @@ for f in ${filelist[*]}; do
 	elif ! diff "$olddir/$f" "$newdir/$f" >/dev/null 2>&1; then
 		echo "Patch: $f"
 		$genpatch "$olddir/$f" "$newdir/$f" $archive >>$logfile 2>&1
-		echo $f | sed 's/,.//'| tr / \\  >> $workmanifest
+		echo $f | sed 's/,.//'| tr / \\\\  >> $workmanifest
 	fi
 done
 
@@ -83,7 +83,7 @@ echo Manifest : $manifest
 
 if [ -s $missing ]; then
 	echo .
-	echo Remeber to add following files to missing subdir
+	echo Remember to add following files to missing subdir
 	cat $missing
 fi
 
