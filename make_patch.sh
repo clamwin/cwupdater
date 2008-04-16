@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 genpatch="genpat.exe -O -B=16"
-#genpatch="genpat.exe"
 
 list_files()
 {
