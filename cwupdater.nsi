@@ -84,7 +84,6 @@ FunctionEnd
 
 Section "CwUpdater"
     Var /GLOBAL OutLookInstalled
-    Var /GLOBAL RestartExplorer
     Var /GLOBAL DESTDIR
     Var /GLOBAL BINDIR
     Var /GLOBAL VERSTR
@@ -170,15 +169,6 @@ versionok:
     ExecWait '"$BINDIR\WClose.exe"'
     SetDetailsPrint both
 
-    StrCpy $RestartExplorer 0
-    MessageBox MB_YESNO "Would you like to stop/start Windows Explorer to avoid reboot?" IDNO startupdate
-    DetailPrint "Exiting Windows Explorer..."
-    nsRestartExplorer::nsRestartExplorer quit 45000 kill
-    Pop $1
-    DetailPrint $1
-    StrCpy $RestartExplorer 1
-
-startupdate:
     ; Deleting obsolete files
     Delete /rebootok "$BINDIR\pthreadVC2.dll"
     Delete /rebootok "$BINDIR\img\Clam.png"
@@ -270,21 +260,9 @@ reguni:
     DetailPrint "Cannot update uninstall string in the registry"
 
 regdone:
-    IfRebootFlag 0 startexplorer
+    IfRebootFlag 0 startctray
         MessageBox MB_YESNO "A reboot is required to finish the upgrade. Do you wish to reboot now?" IDNO theend
         Reboot
-
-startexplorer:
-    StrCmp $RestartExplorer 1 0 startctray
-    DetailPrint "Starting Windows Explorer"
-    nsRestartExplorer::nsRestartExplorer start 45000
-    Pop $1
-    DetailPrint $1
-    StrCmp $1 "OK" startctray
-
-    MessageBox MB_YESNO "Cannot start Windows Explorer. Do you wish to reboot?" IDNO theend
-    Reboot
-
 startctray:
     SetDetailsPrint none
     Exec '"$BINDIR\ClamTray.exe"'
