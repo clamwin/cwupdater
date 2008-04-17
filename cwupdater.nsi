@@ -19,6 +19,8 @@
 ; VPatch NSIS Plugin: Copyright (C) 2001-2008 Koen van de Sande / Van de Sande Productions
 ; please look at http://www.tibed.net/vpatch for licensing informations
 
+;!define NOCHECK
+
 SetCompressor /solid lzma
 Name "ClamWin Free Antivirus Upgrade"
 OutFile "cwupdater.exe"
@@ -80,6 +82,14 @@ end:
     Pop $2
     Pop $1
     Exch $0
+FunctionEnd
+
+Function .onInit
+        InitPluginsDir
+        File /oname=$PLUGINSDIR\splash.bmp splash.bmp
+        advsplash::show 1000 600 400 0x04025C $PLUGINSDIR\splash
+        Pop $0 
+        Delete $PLUGINSDIR\splash.bmp
 FunctionEnd
 
 Section "CwUpdater"
@@ -149,6 +159,7 @@ begin:
     Call StripEol
     Pop $OLDVERDW
 
+!ifndef NOCHECK
     ; Check if we have the correct version installed
     IntCmpU $OLDVERDW $VER versionok
     DetailPrint "Required version for this update is $OLDVERDW, found $VER"
@@ -156,6 +167,7 @@ begin:
     DetailPrint "Please download the full instllation from http://www.clamwin.com/download/"
     DetailPrint "Update unsuccessful."
     Goto abort
+!endif
 
 versionok:
     ; Read the version number from the manifest
