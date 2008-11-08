@@ -56,7 +56,7 @@ echo "$oldver" >> $manifest
 echo "$version" >> $manifest
 
 : > $missing
-: > $logfile
+echo $0 $* > $logfile
 
 echo Starting incremental patch generation...
 echo .
