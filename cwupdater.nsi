@@ -164,7 +164,7 @@ begin:
     IntCmpU $OLDVERDW $VER versionok
     DetailPrint "Required version for this update is $OLDVERDW, found $VER"
     DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this update"
-    DetailPrint "Please download the full instllation from http://www.clamwin.com/download/"
+    DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
     DetailPrint "Update unsuccessful."
     Goto abort
 !endif
