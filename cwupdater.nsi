@@ -55,7 +55,7 @@ end_${SOURCEFILE}:
 !macroend
 
 !define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\nsis.bmp"
+!define MUI_HEADERIMAGE_BITMAP "header.bmp"
 !define MUI_ICON "cwupdater.ico"
 !define MUI_ABORTWARNING
 
