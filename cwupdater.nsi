@@ -1,6 +1,6 @@
 ; ClamWin NSIS/VPatch updater
 ;
-; Copyright (c) 2008 Gianluigi Tiesi <sherpya@netfarm.it>
+; Copyright (c) 2008-2009 Gianluigi Tiesi <sherpya@netfarm.it>
 ;
 ; This program is free software; you can redistribute it and/or
 ; modify it under the terms of the GNU Library General Public
@@ -20,6 +20,9 @@
 ; please look at http://www.tibed.net/vpatch for licensing informations
 
 ;!define NOCHECK
+!define NOSPLASH
+
+Caption "...last words from sherpya: Nei miei occhi vedo solo te..."
 
 SetCompressor /solid lzma
 Name "ClamWin Free Antivirus Upgrade"
@@ -39,6 +42,7 @@ CompletedText "Done"
 !include "MUI2.nsh"
 !include "TextFunc.nsh"
 !include "WinVer.nsh"
+!include "cWelcome.nsh"
 
 ; VPatch macro definition
 !macro VPatchFile PATCHDATA SOURCEFILE TEMPFILE
@@ -59,6 +63,7 @@ end_${SOURCEFILE}:
 !define MUI_ICON "cwupdater.ico"
 !define MUI_ABORTWARNING
 
+Page custom cwelcome
 !insertmacro MUI_PAGE_LICENSE "License.rtf"
 !insertmacro MUI_PAGE_INSTFILES
 
@@ -86,10 +91,12 @@ FunctionEnd
 
 Function .onInit
         InitPluginsDir
+!ifndef NOSPLASH
         File /oname=$PLUGINSDIR\splash.bmp splash.bmp
         advsplash::show 1000 600 400 0x04025C $PLUGINSDIR\splash
         Pop $0 
         Delete $PLUGINSDIR\splash.bmp
+!endif
 FunctionEnd
 
 Section "CwUpdater"
@@ -111,7 +118,7 @@ Section "CwUpdater"
     ReadRegStr $BINDIR HKCU Software\ClamWin "Path"
     IfErrors 0 version
     DetailPrint "Cannot find ClamWin Free Antivirus Installation, aborting..."
-    Goto abort
+    Abort
 
 version:
     ; Installed Version
@@ -121,7 +128,7 @@ version:
     ReadRegDWORD $VER HKCU "Software\ClamWin" "Version"
     IfErrors 0 outlook
     DetailPrint "Cannot find ClamWin Free Antivirus Version, aborting..."
-    Goto abort
+    Abort
 
 outlook:
     ; Search for outlook
@@ -163,10 +170,10 @@ begin:
     ; Check if we have the correct version installed
     IntCmpU $OLDVERDW $VER versionok
     DetailPrint "Required version for this update is $OLDVERDW, found $VER"
-    DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this update"
+    DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this setup"
     DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
     DetailPrint "Update unsuccessful."
-    Goto abort
+    Abort
 !endif
 
 versionok:
@@ -282,6 +289,5 @@ startctray:
 
 theend:
     DetailPrint "ClamWin Free Antivirus Upgraded to $VERSTR"
-abort:
 
 SectionEnd
