@@ -22,7 +22,7 @@
 ;!define NOCHECK
 !define NOSPLASH
 
-Caption "...last words from sherpya: Nei miei occhi vedo solo te..."
+Caption "ClamWin Free Antivirus Updater"
 
 SetCompressor /solid lzma
 Name "ClamWin Free Antivirus Upgrade"
