@@ -43,6 +43,7 @@ CompletedText "Done"
 !include "TextFunc.nsh"
 !include "WinVer.nsh"
 !include "cWelcome.nsh"
+!include "cTerminate.nsh"
 
 ; VPatch macro definition
 !macro VPatchFile PATCHDATA SOURCEFILE TEMPFILE
@@ -89,12 +90,19 @@ end:
     Exch $0
 FunctionEnd
 
+!define CloseApp "!insertmacro CloseApp"
+!macro CloseApp ClassName Title
+    Push "${Title}"
+    Push "${ClassName}"
+    Call TerminateApp
+!macroend
+
 Function .onInit
         InitPluginsDir
 !ifndef NOSPLASH
         File /oname=$PLUGINSDIR\splash.bmp splash.bmp
         advsplash::show 1000 600 400 0x04025C $PLUGINSDIR\splash
-        Pop $0 
+        Pop $0
         Delete $PLUGINSDIR\splash.bmp
 !endif
 FunctionEnd
@@ -183,9 +191,14 @@ versionok:
     Call StripEol
     Pop $VERDW
 
-    DetailPrint "Closing ClamTray..."
+    DetailPrint "Closing ClamWin and ClamTray..."
     SetDetailsPrint none
-    ExecWait '"$BINDIR\WClose.exe"'
+
+    ${CloseApp} "wxWindowClass" "ClamWin Free Antivirus"
+    ${CloseApp} "#32770" "ClamWin Internet Update Status"
+    ${CloseApp} "#32770" "ClamWin Preferences"
+    ${CloseApp} "ClamWinTrayWindow" "ClamWin"
+
     SetDetailsPrint both
 
     ; Deleting obsolete files
