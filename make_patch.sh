@@ -2,12 +2,12 @@
 #
 # ClamWin NSIS/VPatch updater
 #
-# Copyright (c) 2007 Gianluigi Tiesi <sherpya@netfarm.it>
+# Copyright (c) 2007-2009 Gianluigi Tiesi <sherpya@netfarm.it>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
 # License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
+# newversion_dw 2 of the License, or (at your option) any later newversion_dw.
 #
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Library General Public
 # License along with this software; if not, write to the
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+# ex: make_patch.sh 0.95.1 0.95.2 0.95.1.0 9520 0.95.2
 
 genpatch="genpat.exe -O -B=16"
 
@@ -30,7 +32,7 @@ list_files()
 }
 
 if [ $# != 5 ]; then
-  echo "Usage: $0 olddir newdir oldversion version version_str"
+  echo "Usage: $0 olddir newdir targetversion newversion_dw newversion_sz"
   exit 1
 fi
 
@@ -41,9 +43,9 @@ missing=cwupdate.mis
 logfile=patch.log
 olddir="$1"
 newdir="$2"
-oldver="$3"
-version="$4"
-versionstr="$5"
+targetv="$3"
+newversion_dw="$4"
+newversion_sz="$5"
 
 pushd "$newdir" >/dev/null 2>&1
 list=$(list_files)
@@ -51,9 +53,10 @@ popd >/dev/null 2>&1
 
 eval "filelist=($list)"
 rm -f $archive
-echo "$versionstr" > $manifest
-echo "$oldver" >> $manifest
-echo "$version" >> $manifest
+: > $manifest
+echo "$targetv" >> $manifest
+echo "$newversion_dw" >> $manifest
+echo "$newversion_sz" >> $manifest
 
 : > $missing
 echo $0 $* > $logfile

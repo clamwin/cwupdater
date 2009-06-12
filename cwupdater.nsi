@@ -67,13 +67,11 @@ Function .onInit
 FunctionEnd
 
 Section "CwUpdater"
-    Var /GLOBAL OutLookInstalled
     Var /GLOBAL DESTDIR
     Var /GLOBAL BINDIR
-    Var /GLOBAL VERSTR
-    Var /GLOBAL VER
-    Var /GLOBAL OLDVERDW
-    Var /GLOBAL VERDW
+    Var /GLOBAL TARGETV
+    Var /GLOBAL NEWVERDW
+    Var /GLOBAL NEWVERSZ
     Var /GLOBAL REGUNI
     Var /GLOBAL FD
 
@@ -82,36 +80,11 @@ Section "CwUpdater"
     ; Search for ClamWin installation path
     ClearErrors
     ReadRegStr $BINDIR HKLM Software\ClamWin "Path"
-    IfErrors 0 version
+    IfErrors 0 begin
     ReadRegStr $BINDIR HKCU Software\ClamWin "Path"
-    IfErrors 0 version
+    IfErrors 0 begin
     DetailPrint "Cannot find ClamWin Free Antivirus Installation, aborting..."
     Abort
-
-version:
-    ; Installed Version
-    ClearErrors
-    ReadRegDWORD $VER HKLM "Software\ClamWin" "Version"
-    IfErrors 0 outlook
-    ReadRegDWORD $VER HKCU "Software\ClamWin" "Version"
-    IfErrors 0 outlook
-    DetailPrint "Cannot find ClamWin Free Antivirus Version, aborting..."
-    Abort
-
-outlook:
-    ; Search for outlook
-    StrCpy $OutLookInstalled 0
-    ClearErrors
-    ReadRegDWORD $0 HKLM "Software\Microsoft\Office\Outlook\Addins\ClamWin.OutlookAddin" "LoadBehavior"
-    IfErrors nonadmin
-    StrCpy $OutLookInstalled 1
-    Goto begin
-
-nonadmin:
-    ClearErrors
-    ReadRegDWORD $0 HKCU "Software\Microsoft\Office\Outlook\Addins\ClamWin.OutlookAddin" "LoadBehavior"
-    IfErrors begin
-    StrCpy $OutLookInstalled 1
 
 begin:
     InitPluginsDir
@@ -122,22 +95,35 @@ begin:
 
     FileOpen $FD $PLUGINSDIR\cwupdate.lst r
 
-    ; Read the version string from the manifest
-    FileRead $FD $VERSTR
-    Push $VERSTR
+    ; Target version
+    FileRead $FD $TARGETV
+    Push $TARGETV
     Call StripEol
-    Pop $VERSTR
+    Pop $TARGETV
 
-    ; Read the old version number from the manifest
-    FileRead $FD $OLDVERDW
-    Push $OLDVERDW
+    ; New version DWORD
+    FileRead $FD $NEWVERDW
+    Push $NEWVERDW
     Call StripEol
-    Pop $OLDVERDW
+    Pop $NEWVERDW
+
+    ; New version String for Uninstaller
+    FileRead $FD $NEWVERSZ
+    Push $NEWVERSZ
+    Call StripEol
+    Pop $NEWVERSZ
+
+    GetDllVersion "$BINDIR\ClamWin.exe" $R0 $R1
+    IntOp $R2 $R0 / 0x00010000
+    IntOp $R3 $R0 & 0x0000ffff
+    IntOp $R4 $R1 / 0x00010000
+    IntOp $R5 $R1 & 0x0000ffff
+    StrCpy $R8 "$R2.$R3.$R4.$R5"
 
 !ifndef NOCHECK
     ; Check if we have the correct version installed
-    IntCmpU $OLDVERDW $VER versionok
-    DetailPrint "Required version for this update is $OLDVERDW, found $VER"
+    StrCmp $TARGETV $R8 versionok
+    DetailPrint "Required version for this update is $TARGETV, found $R8"
     DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this setup"
     DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
     DetailPrint "Update unsuccessful."
@@ -145,12 +131,6 @@ begin:
 !endif
 
 versionok:
-    ; Read the version number from the manifest
-    FileRead $FD $VERDW
-    Push $VERDW
-    Call StripEol
-    Pop $VERDW
-
     DetailPrint "Closing ClamWin and ClamTray..."
     SetDetailsPrint none
 
@@ -160,14 +140,6 @@ versionok:
     ${CloseApp} "ClamWinTrayWindow" "ClamWin"
 
     SetDetailsPrint both
-
-    ; Deleting obsolete files
-    ;Delete /rebootok "$BINDIR\pthreadVC2.dll"
-    ;Delete /rebootok "$BINDIR\img\Clam.png"
-    ;Delete /rebootok "$BINDIR\img\FD-logo.png"
-    ;Delete /rebootok "$BINDIR\img\PythonPowered.gif"
-    ;Delete /rebootok "$BINDIR\img\Support.png"
-    ;Delete /rebootok "$BINDIR\..\lib\pyclamav.pyd"
 
     ; Extracting missing files
     StrCpy $DESTDIR $BINDIR -3
@@ -188,13 +160,6 @@ versionok:
         SetDetailsPrint both
     ${EndIf}
 
-    ; OutLook Files
-    StrCmp $OutLookInstalled 1 0 common
-    DetailPrint "Checking for OutLook additional files"
-    SetDetailsPrint none
-    File /nonfatal /r "missing\outlook\*"
-    SetDetailsPrint both
-
 common:
     ; Common Files
     DetailPrint "Checking for Common additional files"
@@ -202,7 +167,7 @@ common:
     File /nonfatal /r "missing\common\*"
     SetDetailsPrint both
 
-    DetailPrint "Upgrading ClamWin Free Antivirus to version $VERSTR ($OLDVERDW -> $VERDW)"
+    DetailPrint "Upgrading ClamWin Free Antivirus to version $NEWVERSZ ($NEWVERDW)"
     Loop:
         ClearErrors
         ; Read a line from the manifest
@@ -238,16 +203,16 @@ common:
     DetailPrint "Updating registry keys..."
 
     ClearErrors
-    WriteRegDWORD HKLM "Software\ClamWin" "Version" $VERDW
+    WriteRegDWORD HKLM "Software\ClamWin" "Version" $NEWVERDW
     IfErrors 0 reguni
-    WriteRegDWORD HKCU "Software\ClamWin" "Version" $VERDW
+    WriteRegDWORD HKCU "Software\ClamWin" "Version" $NEWVERDW
     IfErrors 0 reguni
     DetailPrint "Cannot update version key in the registry"
 
 reguni:
-    WriteRegStr HKLM "$REGUNI" "DisplayName" "ClamWin Free Antivirus $VERSTR"
+    WriteRegStr HKLM "$REGUNI" "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
     IfErrors 0 regdone
-    WriteRegStr HKCU "$REGUNI" "DisplayName" "ClamWin Free Antivirus $VERSTR"
+    WriteRegStr HKCU "$REGUNI" "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
     IfErrors 0 regdone
     DetailPrint "Cannot update uninstall string in the registry"
 
@@ -261,6 +226,6 @@ startctray:
     SetDetailsPrint both
 
 theend:
-    DetailPrint "ClamWin Free Antivirus Upgraded to $VERSTR"
+    DetailPrint "ClamWin Free Antivirus Upgraded to $NEWVERSZ"
 
 SectionEnd
