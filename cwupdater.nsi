@@ -43,21 +43,7 @@ CompletedText "Done"
 !include "TextFunc.nsh"
 !include "WinVer.nsh"
 !include "cWelcome.nsh"
-!include "cTerminate.nsh"
-
-; VPatch macro definition
-!macro VPatchFile PATCHDATA SOURCEFILE TEMPFILE
-    vpatch::vpatchfile "${PATCHDATA}" "${SOURCEFILE}" "${TEMPFILE}"
-    Pop $1
-    StrCpy $1 $1 2
-    StrCmp $1 "OK" ok_${SOURCEFILE}
-    SetErrors
-ok_${SOURCEFILE}:
-    IfFileExists "${TEMPFILE}" +1 end_${SOURCEFILE}
-    Delete "${SOURCEFILE}"
-    Rename /REBOOTOK "${TEMPFILE}" "${SOURCEFILE}"
-end_${SOURCEFILE}:
-!macroend
+!include "cUtils.nsh"
 
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "header.bmp"
@@ -69,33 +55,6 @@ Page custom cwelcome
 !insertmacro MUI_PAGE_INSTFILES
 
 !insertmacro MUI_LANGUAGE "English"
-
-Function StripEol
-    Exch $0
-    Push $1
-    Push $2
-    StrCpy $1 0
-loop:
-    IntOp $1 $1 + 1
-    StrCpy $2 $0 1 $1
-    StrCmp $2 $\r found
-    StrCmp $2 $\n found
-    StrCmp $2 "" end
-    Goto loop
-found:
-    StrCpy $0 $0 $1
-end:
-    Pop $2
-    Pop $1
-    Exch $0
-FunctionEnd
-
-!define CloseApp "!insertmacro CloseApp"
-!macro CloseApp ClassName Title
-    Push "${Title}"
-    Push "${ClassName}"
-    Call TerminateApp
-!macroend
 
 Function .onInit
         InitPluginsDir
@@ -116,6 +75,7 @@ Section "CwUpdater"
     Var /GLOBAL OLDVERDW
     Var /GLOBAL VERDW
     Var /GLOBAL REGUNI
+    Var /GLOBAL FD
 
     StrCpy $REGUNI "Software\Microsoft\Windows\CurrentVersion\Uninstall\ClamWin Free Antivirus_is1"
 
@@ -160,16 +120,16 @@ begin:
     File /oname=$PLUGINSDIR\cwupdate.lst cwupdate.lst
     SetDetailsPrint both
 
-    FileOpen $0 $PLUGINSDIR\cwupdate.lst r
+    FileOpen $FD $PLUGINSDIR\cwupdate.lst r
 
     ; Read the version string from the manifest
-    FileRead $0 $VERSTR
+    FileRead $FD $VERSTR
     Push $VERSTR
     Call StripEol
     Pop $VERSTR
 
     ; Read the old version number from the manifest
-    FileRead $0 $OLDVERDW
+    FileRead $FD $OLDVERDW
     Push $OLDVERDW
     Call StripEol
     Pop $OLDVERDW
@@ -186,7 +146,7 @@ begin:
 
 versionok:
     ; Read the version number from the manifest
-    FileRead $0 $VERDW
+    FileRead $FD $VERDW
     Push $VERDW
     Call StripEol
     Pop $VERDW
@@ -202,12 +162,12 @@ versionok:
     SetDetailsPrint both
 
     ; Deleting obsolete files
-    Delete /rebootok "$BINDIR\pthreadVC2.dll"
-    Delete /rebootok "$BINDIR\img\Clam.png"
-    Delete /rebootok "$BINDIR\img\FD-logo.png"
-    Delete /rebootok "$BINDIR\img\PythonPowered.gif"
-    Delete /rebootok "$BINDIR\img\Support.png"
-    Delete /rebootok "$BINDIR\..\lib\pyclamav.pyd"
+    ;Delete /rebootok "$BINDIR\pthreadVC2.dll"
+    ;Delete /rebootok "$BINDIR\img\Clam.png"
+    ;Delete /rebootok "$BINDIR\img\FD-logo.png"
+    ;Delete /rebootok "$BINDIR\img\PythonPowered.gif"
+    ;Delete /rebootok "$BINDIR\img\Support.png"
+    ;Delete /rebootok "$BINDIR\..\lib\pyclamav.pyd"
 
     ; Extracting missing files
     StrCpy $DESTDIR $BINDIR -3
@@ -246,34 +206,34 @@ common:
     Loop:
         ClearErrors
         ; Read a line from the manifest
-        FileRead $0 $1
+        FileRead $FD $1
         IfErrors loopend
 
         ; Strip end of line char
         Push $1
         Call StripEol
         Pop $1
-        StrCpy $R1 "$DESTDIR$1"
+        StrCpy $1 "$DESTDIR$1"
 
         ; Check if the destination file exists, if not skip the patch
         ; to avoid creating 0 sized files
-        IfFileExists $R1 gentemp
-        DetailPrint "Skipping $R1 since is not installed"
+        IfFileExists $1 gentemp
+        DetailPrint "Skipping $1 since is not installed"
         Goto Loop
 
     gentemp:
         ; Generate a temp file in the app dir, this is better than
         ; using a temp file and renaming it on reboot (tmp can be cleaned)
-        StrCpy $R0 "$R1.cwu"
+        StrCpy $0 "$1.cwu"
 
-        DetailPrint "Patching $R1"
+        DetailPrint "Patching $1"
 
         ; PatchIt
         ClearErrors
-        !insertmacro VPatchFile "$PLUGINSDIR\cwupdate.pat" $R1 $R0
+        ${VPatchFile} "$PLUGINSDIR\cwupdate.pat" $1 $0
         Goto Loop
     loopend:
-        FileClose $0
+        FileClose $FD
 
     DetailPrint "Updating registry keys..."
 
