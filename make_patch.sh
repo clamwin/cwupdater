@@ -2,7 +2,7 @@
 #
 # ClamWin NSIS/VPatch updater
 #
-# Copyright (c) 2007-2009 Gianluigi Tiesi <sherpya@netfarm.it>
+# Copyright (c) 2007-2010 Gianluigi Tiesi <sherpya@netfarm.it>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -18,7 +18,7 @@
 # License along with this software; if not, write to the
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-# ex: make_patch.sh 0.95.1 0.95.2 0.95.1.0 9520 0.95.2
+# ex: make_patch.sh 0.95.3 0.96 0.95.3.0 9600 0.96
 
 genpatch="genpat.exe -O -B=16"
 
@@ -32,7 +32,7 @@ list_files()
 }
 
 if [ $# != 5 ]; then
-  echo "Usage: $0 olddir newdir targetversion newversion_dw newversion_sz"
+  echo "Usage: $0 olddir newdir target_exe_version newversion_dw newversion_sz"
   exit 1
 fi
 
@@ -43,7 +43,7 @@ missing=cwupdate.mis
 logfile=patch.log
 olddir="$1"
 newdir="$2"
-targetv="$3"
+target_exe_version="$3"
 newversion_dw="$4"
 newversion_sz="$5"
 
@@ -54,7 +54,7 @@ popd >/dev/null 2>&1
 eval "filelist=($list)"
 rm -f $archive
 : > $manifest
-echo "$targetv" >> $manifest
+echo "$target_exe_version" >> $manifest
 echo "$newversion_dw" >> $manifest
 echo "$newversion_sz" >> $manifest
 

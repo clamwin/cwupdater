@@ -1,6 +1,6 @@
 ; ClamWin NSIS/VPatch updater
 ;
-; Copyright (c) 2008-2009 Gianluigi Tiesi <sherpya@netfarm.it>
+; Copyright (c) 2008-2010 Gianluigi Tiesi <sherpya@netfarm.it>
 ;
 ; This program is free software; you can redistribute it and/or
 ; modify it under the terms of the GNU Library General Public
@@ -149,12 +149,12 @@ versionok:
 
     ; Specific files
     ${If} ${IsNT}
-        DetailPrint "Checking for Windows 2000/XP/2003/Vista additional files"
+        DetailPrint "Checking for OS specific files to add"
         SetDetailsPrint none
         File /nonfatal /r "missing\windows\*"
         SetDetailsPrint both
     ${Else}
-        DetailPrint "Checking for Windows 98/ME additional files"
+        DetailPrint "Checking for Windows 98/ME specific files to add"
         SetDetailsPrint none
         File /nonfatal /r "missing\win9x\*"
         SetDetailsPrint both
@@ -162,7 +162,7 @@ versionok:
 
 common:
     ; Common Files
-    DetailPrint "Checking for Common additional files"
+    DetailPrint "Checking for Common files to add"
     SetDetailsPrint none
     File /nonfatal /r "missing\common\*"
     SetDetailsPrint both
