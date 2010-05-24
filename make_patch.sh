@@ -20,7 +20,7 @@
 
 # ex: make_patch.sh 0.95.3 0.96 0.95.3.0 9600 0.96
 
-genpatch="genpat.exe -O -B=16"
+genpatch="genpat.exe -O -B=32"
 
 list_files()
 {
