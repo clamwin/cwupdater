@@ -23,6 +23,7 @@
 !define NOSPLASH
 
 Caption "ClamWin Free Antivirus Updater"
+BrandingText "ClamWin Updater"
 
 SetCompressor /solid lzma
 Name "ClamWin Free Antivirus Upgrade"
