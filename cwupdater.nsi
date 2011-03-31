@@ -1,6 +1,6 @@
 ; ClamWin NSIS/VPatch updater
 ;
-; Copyright (c) 2008-2010 Gianluigi Tiesi <sherpya@netfarm.it>
+; Copyright (c) 2008-2011 Gianluigi Tiesi <sherpya@netfarm.it>
 ;
 ; This program is free software; you can redistribute it and/or
 ; modify it under the terms of the GNU Library General Public
@@ -20,6 +20,7 @@
 ; please look at http://www.tibed.net/vpatch for licensing informations
 
 ;!define NOCHECK
+;!define QRECOVER
 !define NOSPLASH
 
 Caption "ClamWin Free Antivirus Updater"
@@ -73,16 +74,13 @@ Section "CwUpdater"
     Var /GLOBAL TARGETV
     Var /GLOBAL NEWVERDW
     Var /GLOBAL NEWVERSZ
-    Var /GLOBAL REGUNI
     Var /GLOBAL FD
+    Var /GLOBAL REGUNI
 
     StrCpy $REGUNI "Software\Microsoft\Windows\CurrentVersion\Uninstall\ClamWin Free Antivirus_is1"
 
     ; Search for ClamWin installation path
-    ClearErrors
-    ReadRegStr $BINDIR HKLM Software\ClamWin "Path"
-    IfErrors 0 begin
-    ReadRegStr $BINDIR HKCU Software\ClamWin "Path"
+    ${_ReadRegStr} $BINDIR "Software\ClamWin" "Path"
     IfErrors 0 begin
     DetailPrint "Cannot find ClamWin Free Antivirus Installation, aborting..."
     Abort
@@ -123,15 +121,15 @@ begin:
 
 !ifndef NOCHECK
     ; Check if we have the correct version installed
-    StrCmp $TARGETV $R8 versionok
-    DetailPrint "Required version for this update is $TARGETV, found $R8"
-    DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this setup"
-    DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
-    DetailPrint "Update unsuccessful."
-    Abort
+    ${If} $TARGETV != $R8
+        DetailPrint "Required version for this update is $TARGETV, found $R8"
+        DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this setup"
+        DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
+        DetailPrint "Update unsuccessful."
+        Abort
+    ${EndIf}
 !endif
 
-versionok:
     DetailPrint "Closing ClamWin and ClamTray..."
     SetDetailsPrint none
 
@@ -161,7 +159,6 @@ versionok:
         SetDetailsPrint both
     ${EndIf}
 
-common:
     ; Common Files
     DetailPrint "Checking for Common files to add"
     SetDetailsPrint none
@@ -203,19 +200,39 @@ common:
 
     DetailPrint "Updating registry keys..."
 
-    ClearErrors
-    WriteRegDWORD HKLM "Software\ClamWin" "Version" $NEWVERDW
+    ${_WriteRegDWORD} "Software\ClamWin" "Version" $NEWVERDW
     IfErrors 0 reguni
-    WriteRegDWORD HKCU "Software\ClamWin" "Version" $NEWVERDW
-    IfErrors 0 reguni
+
     DetailPrint "Cannot update version key in the registry"
+    StrCpy $REGUNI "Software\Microsoft\Windows\CurrentVersion\Uninstall\ClamWin Free Antivirus_is1"
 
 reguni:
-    WriteRegStr HKLM "$REGUNI" "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
-    IfErrors 0 regdone
-    WriteRegStr HKCU "$REGUNI" "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
-    IfErrors 0 regdone
+    ${_WriteRegStr} $REGUNI "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
+    IfErrors 0 shortcuts
     DetailPrint "Cannot update uninstall string in the registry"
+
+shortcuts:
+!ifdef QRECOVER
+    IfFileExists "$BINDIR\QRecover.exe" 0 regdone
+
+    ${_ReadRegDWORD} $0 $REGUNI "Inno Setup: No Icons"
+    IntCmp $0 1 regdone
+
+    ${_ReadRegStr} $0 $REGUNI "Inno Setup: Icon Group"
+    IfErrors regdone
+
+    SetOutPath $BINDIR
+
+    SetShellVarContext current
+    StrCpy $1 "$SMPROGRAMS\$0"
+    IfFileExists $1 0 +2
+    CreateShortCut "$1\Quarantine Browser.lnk" "$BINDIR\QRecover.exe"
+
+    SetShellVarContext all
+    StrCpy $1 "$SMPROGRAMS\$0"
+    IfFileExists $1 0 +2
+    CreateShortCut "$1\Quarantine Browser.lnk" "$BINDIR\QRecover.exe"
+!endif
 
 regdone:
     IfRebootFlag 0 startctray

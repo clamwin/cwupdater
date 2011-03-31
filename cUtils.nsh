@@ -28,6 +28,38 @@ Function TerminateApp
     Pop $0
 FunctionEnd
 
+!define _ReadRegStr "!insertmacro _ReadRegStr"
+!macro _ReadRegStr RESULT KEY SUBKEY
+    ClearErrors
+    ReadRegStr ${RESULT} HKLM "${KEY}" "${SUBKEY}"
+    IfErrors 0 +2
+    ReadRegStr ${RESULT} HKCU "${KEY}" "${SUBKEY}"
+!macroend
+
+!define _WriteRegStr "!insertmacro _WriteRegStr"
+!macro _WriteRegStr KEY SUBKEY VALUE
+    ClearErrors
+    WriteRegStr HKLM "${KEY}" "${SUBKEY}" "${VALUE}"
+    IfErrors 0 +2
+    WriteRegStr HKCU "${KEY}" "${SUBKEY}" "${VALUE}"
+!macroend
+
+!define _ReadRegDWORD "!insertmacro _ReadRegDWORD"
+!macro _ReadRegDWORD RESULT KEY SUBKEY
+    ClearErrors
+    ReadRegDWORD ${RESULT} HKLM "${KEY}" "${SUBKEY}"
+    IfErrors 0 +2
+    ReadRegDWORD ${RESULT} HKCU "${KEY}" "${SUBKEY}"
+!macroend
+
+!define _WriteRegDWORD "!insertmacro _WriteRegDWORD"
+!macro _WriteRegDWORD KEY SUBKEY VALUE
+    ClearErrors
+    WriteRegDWORD HKLM "${KEY}" "${SUBKEY}" "${VALUE}"
+    IfErrors 0 +2
+    WriteRegDWORD HKCU "${KEY}" "${SUBKEY}" "${VALUE}"
+!macroend
+
 !define CloseApp "!insertmacro CloseApp"
 !macro CloseApp ClassName Title
     Push "${Title}"
