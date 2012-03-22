@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # ex: make_patch.sh 0.95.3 0.96 0.95.3.0 9600 0.96
+#   : make_patch.sh 0.97.3 0.97.4 0.97.3.0 9740 0.97.4
 
 genpatch="genpat.exe -O -B=32"
 
