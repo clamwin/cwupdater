@@ -60,7 +60,7 @@ echo "$newversion_dw" >> $manifest
 echo "$newversion_sz" >> $manifest
 
 : > $missing
-echo $0 $* > $logfile
+echo -e "$0 $*\r" > $logfile
 
 echo Starting incremental patch generation...
 echo .
