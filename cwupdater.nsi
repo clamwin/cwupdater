@@ -1,6 +1,6 @@
 ; ClamWin NSIS/VPatch updater
 ;
-; Copyright (c) 2008-2011 Gianluigi Tiesi <sherpya@netfarm.it>
+; Copyright (c) 2008-2018 Gianluigi Tiesi <sherpya@netfarm.it>
 ;
 ; This program is free software; you can redistribute it and/or
 ; modify it under the terms of the GNU Library General Public
@@ -20,7 +20,6 @@
 ; please look at http://www.tibed.net/vpatch for licensing informations
 
 ;!define NOCHECK
-;!define QRECOVER
 !define NOSPLASH
 
 Caption "ClamWin Free Antivirus Updater"
@@ -30,7 +29,7 @@ SetCompressor /solid lzma
 Name "ClamWin Free Antivirus Upgrade"
 OutFile "cwupdater.exe"
 
-!packhdr tmp.dat "upx --best tmp.dat"
+;!packhdr tmp.dat "upx --best tmp.dat"
 XPStyle on
 SetDateSave on
 SetDatablockOptimize on
@@ -83,7 +82,7 @@ Section "CwUpdater"
     ${_ReadRegStr} $BINDIR "Software\ClamWin" "Path"
     IfErrors 0 begin
     DetailPrint "Cannot find ClamWin Free Antivirus Installation, aborting..."
-    Abort
+    Goto abort
 
 begin:
     InitPluginsDir
@@ -126,7 +125,7 @@ begin:
         DetailPrint "You cannot upgrade your ClamWin Free Antivirus installation with this setup"
         DetailPrint "Please download the full installation from http://www.clamwin.com/download/"
         DetailPrint "Update unsuccessful."
-        Abort
+        Goto abort
     ${EndIf}
 !endif
 
@@ -208,42 +207,24 @@ begin:
 
 reguni:
     ${_WriteRegStr} $REGUNI "DisplayName" "ClamWin Free Antivirus $NEWVERSZ"
-    IfErrors 0 shortcuts
+    IfErrors 0 checkreboot
     DetailPrint "Cannot update uninstall string in the registry"
 
-shortcuts:
-!ifdef QRECOVER
-    IfFileExists "$BINDIR\QRecover.exe" 0 regdone
-
-    ${_ReadRegDWORD} $0 $REGUNI "Inno Setup: No Icons"
-    IntCmp $0 1 regdone
-
-    ${_ReadRegStr} $0 $REGUNI "Inno Setup: Icon Group"
-    IfErrors regdone
-
-    SetOutPath $BINDIR
-
-    SetShellVarContext current
-    StrCpy $1 "$SMPROGRAMS\$0"
-    IfFileExists $1 0 +2
-    CreateShortCut "$1\Quarantine Browser.lnk" "$BINDIR\QRecover.exe"
-
-    SetShellVarContext all
-    StrCpy $1 "$SMPROGRAMS\$0"
-    IfFileExists $1 0 +2
-    CreateShortCut "$1\Quarantine Browser.lnk" "$BINDIR\QRecover.exe"
-!endif
-
-regdone:
+checkreboot:
     IfRebootFlag 0 startctray
-        MessageBox MB_YESNO "A reboot is required to finish the upgrade. Do you wish to reboot now?" IDNO theend
-        Reboot
+    MessageBox MB_YESNO "A reboot is required to finish the upgrade. Do you wish to reboot now?" IDNO end
+    Reboot
+
 startctray:
     SetDetailsPrint none
     Exec '"$BINDIR\ClamTray.exe"'
     SetDetailsPrint both
 
-theend:
+end:
     DetailPrint "ClamWin Free Antivirus Upgraded to $NEWVERSZ"
+    Return
+
+abort:
+    SetDetailsPrint none
 
 SectionEnd
